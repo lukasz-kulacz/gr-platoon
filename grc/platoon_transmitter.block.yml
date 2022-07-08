@@ -1,0 +1,41 @@
+id: platoon_transmitter
+label: transmitter
+category: '[platoon]'
+
+templates:
+  imports: from gnuradio import platoon
+  make: platoon.transmitter(${platoon_id}, ${url}, ${gps})
+
+parameters:
+- id: id
+  label: ID
+  dtype: string
+  default: platoon_transmitter_0
+- id: platoon_id
+  label: Platoon ID
+  dtype: int
+  default: 1
+- id: url
+  label: Server URL
+  dtype: string
+  default: http://150.254.223.49:8000/master
+- id: gps
+  label: GPS serial
+  dtype: string
+  default: /dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00
+
+inputs:
+#- label: ...
+#  domain: ...
+#  dtype: ...
+#  vlen: ...
+#  optional: ...
+
+outputs:
+#- label: ...
+#  domain: ...
+#  dtype: ...
+#  vlen: ...
+#  optional: ...
+
+file_format: 1
