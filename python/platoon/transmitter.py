@@ -24,7 +24,9 @@ def read_gps(device_name):
         with serial.Serial(device_name) as ser:
             print('!!! GPS serial reader started')
             while True:
-                gps_string = ser.readline().decode('ascii', errors='replace')
+                line = ser.readline().decode('ascii', errors='replace')
+                if line.find('GNRMC') != -1:
+                    gps_string = line
     except serial.serialutil.SerialException as ex:
         print('!!! GPS serial problem:')
         print(ex)
@@ -55,7 +57,7 @@ class transmitter(gr.basic_block):
         hasGpsData = False
         try:
             nmea = pynmea2.parse(gps_string)
-            print("GPS: ", gps_string)
+            #print("GPS: ", gps_string)
 
             latitude = nmea.latitude
             longitude = nmea.longitude
