@@ -62,7 +62,7 @@ class transmitter(gr.basic_block):
             latitude = nmea.latitude
             longitude = nmea.longitude
             timestamp_gps = nmea.datetime.strftime("%Y-%m-%d %H:%M:%S.%f")
-            speed = nmea.spd_over_grnd
+            speed = nmea.spd_over_grnd if nmea.spd_over_grnd is not None else 0.0
             azimuth = nmea.true_course if nmea.true_course is not None else 0.0
         
             hasGpsData = True
