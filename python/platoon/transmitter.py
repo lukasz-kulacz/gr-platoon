@@ -10,6 +10,7 @@
 import numpy
 from gnuradio import gr
 
+import pynmea2
 import serial
 import requests
 from threading import Thread
@@ -19,10 +20,17 @@ gps_string = ""
 def read_gps(device_name):
     global gps_string
     global gps_enabled
-    with serial.Serial(device_name) as ser:
-        while True:
-            gps_string = ser.readline().decode('ascii', errors='replace')
-            
+    try:
+        with serial.Serial(device_name) as ser:
+            print('!!! GPS serial reader started')
+            while True:
+                gps_string = ser.readline().decode('ascii', errors='replace')
+    except serial.serialutil.SerialException as ex:
+        print('!!! GPS serial problem:')
+        print(ex)
+        print(' ')
+    except:
+        print('!!! GPS general problem')                
 
 class transmitter(gr.basic_block):
     """
@@ -42,21 +50,57 @@ class transmitter(gr.basic_block):
         self.new_thread.start()
 
     def communicate(self):
-        print("GPS: ", gps_string)
+        #print("GPS: ", gps_string)
+        
+        hasGpsData = False
+        try:
+            nmea = pynmea2.parse(gps_string)
+            print("GPS: ", gps_string)
 
-        url = self.server_url + '/' + str(self.platoon_id) 
-        data = {
-            "gps": gps_string
-        }
+            latitude = nmea.latitude
+            longitude = nmea.longitude
+            timestamp_gps = nmea.datetime.strftime("%Y-%m-%d %H:%M:%S.%f")
+            speed = nmea.spd_over_grnd
+            azimuth = nmea.true_course if nmea.true_course is not None else 0.0
+        
+            hasGpsData = True
 
-        response = requests.post(url, json = data)
-        print(response)
-        if response.status_code == 200:
-            response = response.json()
-            if 'freq' in response:
-                return response['freq']
-            else:
-                return 400e6
-        else: 
-            return 400e6        
-    
+        except pynmea2.nmea.ParseError as ex:
+            print('ParseError')   
+        except AttributeError as ex:
+            print('AttributeError')
+
+
+        if hasGpsData:
+            url = self.server_url + '/' + str(self.platoon_id) 
+            data = {
+              "position": {
+                "latitude": latitude,
+                "longitude": longitude
+              },
+              "movement": {
+                "timestamp_gps": timestamp_gps,
+                "speed": speed,
+                "azimuth": azimuth
+              }
+            }
+
+            print('Request: ', data)
+            response = requests.post(url, json = data)
+            print('Response: ', response.status_code)
+            if response.status_code == 200:
+                response = response.json()
+                try:
+                    print('Response: ', response)
+                except:
+                    pass
+
+                if 'platoon' in response and 'frequency' in response['platoon']:
+                    return response['platoon']['frequency']
+                else:
+                    return 400e6
+            else: 
+                return 400e6 
+        else:
+            return 400e6       
+        
