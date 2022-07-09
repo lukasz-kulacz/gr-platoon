@@ -65,7 +65,11 @@ class transmitter(gr.basic_block):
             speed = nmea.spd_over_grnd if nmea.spd_over_grnd is not None else 0.0
             azimuth = nmea.true_course if nmea.true_course is not None else 0.0
         
-            hasGpsData = True
+            if latitude == 0.0:
+                print('Waiting for GPS fix...')
+                print(gps_string)
+            else:
+                hasGpsData = True
 
         except pynmea2.nmea.ParseError as ex:
             print('ParseError')   
