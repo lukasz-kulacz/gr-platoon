@@ -4,7 +4,7 @@ category: '[platoon]'
 
 templates:
   imports: from gnuradio import platoon
-  make: platoon.transmitter(${platoon_id}, ${url}, ${gps})
+  make: platoon.transmitter(${platoon_id}, ${url}, ${gps}, ${gps_baudrate})
 
 parameters:
 - id: id
@@ -23,6 +23,11 @@ parameters:
   label: GPS serial
   dtype: string
   default: /dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00
+- id: gps_baudrate
+  label: GPS baudrate
+  dtype: int
+  default: 9600
+
 
 inputs:
 #- label: ...

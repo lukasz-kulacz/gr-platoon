@@ -17,15 +17,18 @@ from threading import Thread
 
 gps_string = ""
 
-def read_gps(device_name):
+def read_gps(device_name, baudrate):
     global gps_string
     global gps_enabled
     try:
-        with serial.Serial(device_name) as ser:
+        with serial.Serial(device_name, baudrate=baudrate) as ser:
             print('!!! GPS serial reader started')
             while True:
                 line = ser.readline().decode('ascii', errors='replace')
+                #print(line)
                 if line.find('GNRMC') != -1:
+                    gps_string = line
+                elif line.find('GPRMC') != -1:
                     gps_string = line
     except serial.serialutil.SerialException as ex:
         print('!!! GPS serial problem:')
@@ -38,7 +41,7 @@ class transmitter(gr.basic_block):
     """
     docstring for block transmitter
     """
-    def __init__(self, platoon_id, server_url, gps_dev):
+    def __init__(self, platoon_id, server_url, gps_dev, gps_baudrate):
         gr.basic_block.__init__(self,
             name="transmitter",
             in_sig=[],
@@ -46,8 +49,9 @@ class transmitter(gr.basic_block):
         self.platoon_id = platoon_id
         self.server_url = server_url
         self.gps_dev = gps_dev
+        self.gps_baudrate = gps_baudrate
 
-        self.new_thread = Thread(target=read_gps, args=(self.gps_dev,))
+        self.new_thread = Thread(target=read_gps, args=(self.gps_dev, self.gps_baudrate, ))
         self.new_thread.daemon = True
         self.new_thread.start()
 
@@ -92,9 +96,14 @@ class transmitter(gr.basic_block):
             }
 
             print('Request: ', data)
-            response = requests.post(url, json = data)
-            print('Response: ', response.status_code)
-            if response.status_code == 200:
+            response = None
+            try:
+                response = requests.post(url, json = data)
+                print('Response: ', response.status_code)
+            except requests.exceptions.ConnectionError:
+                print('No internet connection...')
+
+            if response is not None and response.status_code == 200:
                 response = response.json()
                 try:
                     print('Response: ', response)

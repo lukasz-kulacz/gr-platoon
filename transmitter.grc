@@ -105,7 +105,7 @@ blocks:
     alias: ''
     begin_tag: pmt.PMT_NIL
     comment: ''
-    file: ''
+    file: /home/user/Downloads/preambula_104_512.bin
     length: '0'
     maxoutbuf: '0'
     minoutbuf: '0'
